@@ -180,44 +180,37 @@
     font-weight: 300;
   }
 
-  /* ─── PHOTO GRID ────────────────────────── */
-  .photo-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 28px;
-  }
-  .photo-card {
+  /* ─── VIDEO ────────────────────────── */
+  .video-wrapper {
     position: relative;
-    overflow: hidden;
+    margin-top: 28px;
     border: 1px solid var(--border);
     background: var(--surface);
+    overflow: hidden;
+    max-width: 700px;
   }
-  .photo-card img {
+  .video-wrapper video {
     width: 100%;
-    height: 280px;
-    object-fit: cover;
     display: block;
-    opacity: 0.92;
-    transition: opacity 0.3s;
+    opacity: 0.95;
   }
-  .photo-card:hover img { opacity: 1; }
-  .photo-overlay {
+  .video-wrapper:hover video { opacity: 1; }
+  .video-label {
     position: absolute;
     bottom: 0; left: 0; right: 0;
     padding: 14px 16px;
-    background: linear-gradient(transparent, rgba(5,5,5,0.95));
+    background: linear-gradient(transparent, rgba(5,5,5,0.9));
     font-family: 'Space Mono', monospace;
     font-size: 0.55rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--tavily);
   }
-  .photo-overlay-top {
+  .video-label-top {
     position: absolute;
     top: 0; left: 0; right: 0;
     padding: 12px 16px;
-    background: linear-gradient(rgba(5,5,5,0.85), transparent);
+    background: linear-gradient(rgba(5,5,5,0.8), transparent);
     font-family: 'Space Mono', monospace;
     font-size: 0.52rem;
     letter-spacing: 0.12em;
@@ -434,8 +427,7 @@
     .coffee-link { font-size: 0.5rem; white-space: normal; text-align: right; line-height: 1.4; }
     .progress-dot { width: 5px; height: 5px; }
     .progress-dot.active { width: 20px; }
-    .photo-grid { grid-template-columns: 1fr; gap: 14px; }
-    .photo-card img { height: 220px; }
+    .video-wrapper { max-width: 100%; }
   }
 
   @media (max-width: 480px) {
@@ -473,9 +465,8 @@
     .progress { bottom: 16px; gap: 6px; }
     .progress-dot { width: 5px; height: 5px; }
     .progress-dot.active { width: 18px; }
-    .photo-card img { height: 180px; }
-    .photo-overlay { font-size: 0.48rem; padding: 10px 12px; }
-    .photo-overlay-top { font-size: 0.45rem; padding: 8px 12px; }
+    .video-label { font-size: 0.48rem; padding: 10px 12px; }
+    .video-label-top { font-size: 0.45rem; padding: 8px 12px; }
     .slide[data-label="LET'S TALK"] .hero-text { font-size: 1.8rem; }
   }
 
@@ -498,7 +489,7 @@
     .progress { bottom: 12px; gap: 5px; }
     .progress-dot { width: 4px; height: 4px; }
     .progress-dot.active { width: 16px; }
-    .photo-card img { height: 160px; }
+    .video-wrapper { max-width: 100%; }
     .slide[data-label="LET'S TALK"] .hero-text { font-size: 1.6rem; }
   }
 
@@ -518,7 +509,7 @@
     .reason-list li { padding: 8px 0; font-size: 0.78rem; }
     .section-tag { margin-bottom: 12px; }
     .progress { bottom: 8px; }
-    .photo-card img { height: 160px; }
+    .video-wrapper { max-width: 100%; }
   }
 </style>
 </head>
@@ -558,16 +549,13 @@
     <div class="slide-inner">
       <div class="section-tag stagger">March 12, 2026</div>
       <h2 class="section-title stagger">From LLMs to Agents</h2>
-      <div class="photo-grid stagger">
-        <div class="photo-card">
-          <img src="event.jpeg" alt="Tavily event — From LLMs to Agents">
-          <div class="photo-overlay">THE EVENT — TAVILY HQ</div>
-        </div>
-        <div class="photo-card">
-          <img src="yash-photo.jpeg" alt="Yash at the Tavily event" style="object-position: center top;">
-          <div class="photo-overlay-top">This is my picture from the event<br>so you remember who this is ↓</div>
-          <div class="photo-overlay">YASH TATINENI</div>
-        </div>
+      <div class="video-wrapper stagger">
+        <video autoplay loop muted playsinline>
+          <source src="event-video.mp4" type="video/mp4">
+          <source src="event-video.mov" type="video/quicktime">
+        </video>
+        <div class="video-label-top">This is me at the event, so you remember who this is ↓</div>
+        <div class="video-label">FROM LLMS TO AGENTS — TAVILY EVENT</div>
       </div>
     </div>
   </div>
