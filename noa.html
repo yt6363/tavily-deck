@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yash × Tavily</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23050505'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='700' font-size='18' fill='%23E1FF50'>T</text></svg>">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg: #050505;
+    --surface: #0a0a0a;
+    --border: #1a1a1a;
+    --border-hover: #2a2a2a;
+    --text: #e8e8e8;
+    --text-dim: #888;
+    --text-muted: #555;
+    --green: #00e600;
+    --green-dim: #00e60022;
+    --green-glow: #00e60044;
+    --tavily: #E1FF50;
+    --tavily-dim: #E1FF5022;
+    --tavily-glow: #E1FF5044;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    cursor: default;
+  }
+
+  .timer-container {
+    position: fixed;
+    top: 14px; right: 24px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .coffee-link {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 5px 0;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .coffee-link:hover { color: var(--tavily); }
+
+  .slide-label {
+    position: fixed;
+    top: 14px; left: 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--tavily);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    z-index: 1000;
+  }
+
+  .progress {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 1000;
+  }
+  .progress-dot {
+    width: 6px; height: 6px;
+    background: var(--border);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .progress-dot.active {
+    background: var(--tavily);
+    box-shadow: 0 0 6px var(--tavily-glow);
+    width: 24px;
+  }
+  .progress-dot:hover { background: var(--text-muted); }
+
+  .nav-hint {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    z-index: 1000;
+  }
+  .nav-hint kbd {
+    display: inline-block;
+    border: 1px solid var(--tavily);
+    color: var(--tavily);
+    padding: 1px 5px;
+    font-size: 0.55rem;
+    margin: 0 2px;
+  }
+
+  .slides-wrapper {
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 80px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+  .slide-inner {
+    max-width: 960px;
+    width: 100%;
+  }
+
+  .hero-text {
+    font-size: 4.5rem;
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .hero-text .accent { color: var(--tavily); font-weight: 600; }
+  .hero-text .dim { color: var(--text-muted); }
+
+  .section-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--tavily);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-tag::before {
+    content: '';
+    width: 24px; height: 1px;
+    background: var(--tavily);
+  }
+
+  .section-title {
+    font-size: 2.2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+
+  .section-body {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--text-dim);
+    max-width: 600px;
+    font-weight: 300;
+  }
+
+  /* ─── VIDEO ────────────────────────── */
+  .video-wrapper {
+    position: relative;
+    margin-top: 28px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    overflow: hidden;
+    max-width: 700px;
+  }
+  .video-wrapper video {
+    width: 100%;
+    display: block;
+    opacity: 0.95;
+  }
+  .video-wrapper:hover video { opacity: 1; }
+  .video-label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 14px 16px;
+    background: linear-gradient(transparent, rgba(5,5,5,0.9));
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--tavily);
+  }
+  .video-label-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 12px 16px;
+    background: linear-gradient(rgba(5,5,5,0.8), transparent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.52rem;
+    letter-spacing: 0.12em;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  /* ─── PROJECT CARDS ────────────────────────── */
+  .project-card {
+    border: 1px solid var(--border);
+    padding: 24px;
+    background: var(--surface);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .project-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--tavily);
+    transform: scaleX(0);
+    transition: transform 0.4s;
+    transform-origin: left;
+  }
+  .project-card:hover { border-color: var(--border-hover); }
+  .project-card:hover::before { transform: scaleX(1); }
+
+  .card-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .card-desc {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 14px;
+    font-weight: 300;
+    max-width: 500px;
+  }
+  .card-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .stat-chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.05em;
+    padding: 2px 7px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .stat-chip.green {
+    border-color: var(--green-dim);
+    color: var(--green);
+    background: var(--green-dim);
+  }
+  .stat-chip.tavily {
+    border-color: var(--tavily-dim);
+    color: var(--tavily);
+    background: var(--tavily-dim);
+  }
+  .card-link {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: var(--tavily);
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .card-link::after { content: '→'; }
+  .card-status {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    margin-left: 8px;
+  }
+  .card-status.live {
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    background: var(--green-dim);
+  }
+  .card-status.dev {
+    border: 1px solid #f59e0b33;
+    color: #f59e0b;
+    background: #f59e0b11;
+  }
+
+  .tech-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 10px;
+  }
+  .tech-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.48rem;
+    letter-spacing: 0.1em;
+    padding: 2px 5px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .reason-list {
+    list-style: none;
+    margin-top: 32px;
+  }
+  .reason-list li {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--text-dim);
+    font-weight: 300;
+  }
+  .reason-list li:first-child { border-top: 1px solid var(--border); }
+  .reason-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--tavily);
+    letter-spacing: 0.1em;
+    padding-top: 3px;
+    flex-shrink: 0;
+  }
+
+  .contact-links {
+    display: flex;
+    gap: 16px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+  .contact-link {
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--text-dim);
+    transition: all 0.3s;
+  }
+  .contact-link:hover {
+    border-color: var(--tavily);
+    color: var(--tavily);
+  }
+  .contact-link.primary {
+    background: var(--tavily);
+    border-color: var(--tavily);
+    color: #000;
+  }
+  .contact-link.primary:hover {
+    background: #f0ff80;
+    border-color: #f0ff80;
+  }
+
+  .slide.active .stagger { animation: fadeUp 0.5s ease both; }
+  .slide.active .stagger:nth-child(1) { animation-delay: 0.1s; }
+  .slide.active .stagger:nth-child(2) { animation-delay: 0.2s; }
+  .slide.active .stagger:nth-child(3) { animation-delay: 0.3s; }
+  .slide.active .stagger:nth-child(4) { animation-delay: 0.4s; }
+  .slide.active .stagger:nth-child(5) { animation-delay: 0.5s; }
+  .slide.active .stagger:nth-child(6) { animation-delay: 0.6s; }
+  .slide.active .stagger:nth-child(7) { animation-delay: 0.7s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hl { color: var(--text); font-weight: 400; }
+
+  /* ─── MOBILE RESPONSIVE ────────────────────── */
+
+  @media (max-width: 768px) {
+    .slide { padding: 48px 36px; }
+    .slide-inner { max-width: 100%; }
+    .hero-text { font-size: 3rem; }
+    .section-title { font-size: 1.8rem; }
+    .section-body { font-size: 0.92rem; max-width: 100%; }
+    .project-card { padding: 20px; }
+    .card-title { font-size: 1.1rem; }
+    .card-desc { font-size: 0.8rem; max-width: 100%; }
+    .reason-list { margin-top: 24px; }
+    .reason-list li { font-size: 0.92rem; padding: 14px 0; gap: 12px; }
+    .contact-links { gap: 10px; margin-top: 28px; }
+    .contact-link { padding: 10px 16px; font-size: 0.6rem; }
+    .nav-hint { display: none; }
+    .slide-label { font-size: 0.5rem; max-width: 40%; }
+    .timer-container { top: 12px; right: 16px; max-width: 55%; }
+    .coffee-link { font-size: 0.5rem; white-space: normal; text-align: right; line-height: 1.4; }
+    .progress-dot { width: 5px; height: 5px; }
+    .progress-dot.active { width: 20px; }
+    .video-wrapper { max-width: 100%; }
+  }
+
+  @media (max-width: 480px) {
+    .slide {
+      padding: 44px 20px;
+      align-items: flex-start;
+      padding-top: 56px;
+      padding-bottom: 48px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .hero-text { font-size: 2.2rem; }
+    .section-title { font-size: 1.5rem; margin-bottom: 12px; }
+    .section-tag { font-size: 0.5rem; letter-spacing: 0.3em; margin-bottom: 16px; gap: 8px; }
+    .section-tag::before { width: 16px; }
+    .section-body { font-size: 0.85rem; line-height: 1.65; max-width: 100%; }
+    .project-card { padding: 16px; }
+    .card-tag { font-size: 0.48rem; letter-spacing: 0.2em; margin-bottom: 8px; }
+    .card-title { font-size: 1rem; }
+    .card-desc { font-size: 0.75rem; line-height: 1.55; margin-bottom: 12px; max-width: 100%; }
+    .card-stats { gap: 4px; }
+    .stat-chip { font-size: 0.46rem; padding: 2px 5px; }
+    .tech-row { gap: 4px; margin-top: 8px; }
+    .tech-badge { font-size: 0.44rem; padding: 2px 5px; }
+    .card-link { font-size: 0.5rem; margin-top: 8px; }
+    .card-status { font-size: 0.42rem; padding: 2px 5px; }
+    .reason-list { margin-top: 20px; }
+    .reason-list li { font-size: 0.82rem; line-height: 1.5; padding: 12px 0; gap: 10px; }
+    .reason-num { font-size: 0.58rem; padding-top: 2px; }
+    .contact-links { flex-direction: column; gap: 8px; margin-top: 24px; }
+    .contact-link { padding: 10px 14px; font-size: 0.55rem; letter-spacing: 0.15em; text-align: center; width: 100%; }
+    .slide-label { font-size: 0.42rem; letter-spacing: 0.2em; top: 12px; left: 14px; max-width: 30%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .timer-container { top: 10px; right: 12px; max-width: 65%; }
+    .coffee-link { font-size: 0.42rem; white-space: normal; text-align: right; line-height: 1.3; letter-spacing: 0.08em; }
+    .progress { bottom: 16px; gap: 6px; }
+    .progress-dot { width: 5px; height: 5px; }
+    .progress-dot.active { width: 18px; }
+    .video-label { font-size: 0.48rem; padding: 10px 12px; }
+    .video-label-top { font-size: 0.45rem; padding: 8px 12px; }
+    .slide[data-label="LET'S TALK"] .hero-text { font-size: 1.8rem; }
+  }
+
+  @media (max-width: 390px) {
+    .slide { padding: 40px 16px; padding-top: 52px; }
+    .hero-text { font-size: 1.9rem; letter-spacing: -0.02em; }
+    .section-title { font-size: 1.3rem; }
+    .section-body { font-size: 0.82rem; line-height: 1.6; }
+    .project-card { padding: 14px; }
+    .card-title { font-size: 0.95rem; }
+    .card-desc { font-size: 0.72rem; line-height: 1.5; margin-bottom: 10px; }
+    .stat-chip { font-size: 0.42rem; padding: 2px 4px; }
+    .tech-badge { font-size: 0.4rem; padding: 1px 4px; }
+    .reason-list li { font-size: 0.78rem; line-height: 1.45; padding: 10px 0; gap: 8px; }
+    .reason-num { font-size: 0.55rem; min-width: 18px; }
+    .contact-link { padding: 9px 12px; font-size: 0.5rem; }
+    .slide-label { font-size: 0.38rem; top: 10px; left: 12px; }
+    .timer-container { top: 8px; right: 10px; gap: 4px; }
+    .coffee-link { font-size: 0.38rem; line-height: 1.25; }
+    .progress { bottom: 12px; gap: 5px; }
+    .progress-dot { width: 4px; height: 4px; }
+    .progress-dot.active { width: 16px; }
+    .video-wrapper { max-width: 100%; }
+    .slide[data-label="LET'S TALK"] .hero-text { font-size: 1.6rem; }
+  }
+
+  @media (max-width: 340px) {
+    .slide { padding: 36px 12px; padding-top: 48px; }
+    .hero-text { font-size: 1.6rem; }
+    .section-title { font-size: 1.15rem; }
+    .section-body { font-size: 0.78rem; }
+    .reason-list li { font-size: 0.74rem; }
+    .card-desc { font-size: 0.68rem; }
+    .slide[data-label="LET'S TALK"] .hero-text { font-size: 1.4rem; }
+  }
+
+  @media (max-height: 600px) {
+    .slide { padding-top: 36px; padding-bottom: 36px; overflow-y: auto; align-items: flex-start; }
+    .hero-text { font-size: 2rem; }
+    .reason-list li { padding: 8px 0; font-size: 0.78rem; }
+    .section-tag { margin-bottom: 12px; }
+    .progress { bottom: 8px; }
+    .video-wrapper { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="slide-label" id="slideLabel">01 / 07</div>
+<div class="timer-container">
+  <a href="https://calendly.com/yashwanthtatineni916/coffee-chat" target="_blank" class="coffee-link">15 MIN COFFEE CHAT? I'LL WORK AROUND YOUR SCHEDULE →</a>
+</div>
+<div class="progress" id="progress"></div>
+<div class="nav-hint"><kbd>←</kbd> <kbd>→</kbd> or scroll</div>
+
+<div class="slides-wrapper">
+
+  <!-- SLIDE 1: LANDING -->
+  <div class="slide active" data-label="INTRO">
+    <div class="slide-inner">
+      <div class="hero-text stagger">
+        Hey <span class="accent">Noa</span><span class="dim">.</span>
+      </div>
+      <div class="hero-text stagger" style="margin-top: 8px;">
+        Hey <span class="accent">Tavily</span><span class="dim">.</span>
+      </div>
+      <div class="hero-text stagger" style="margin-top: 8px;">
+        <span class="dim">I'm</span> <span class="accent">Yash</span><span class="dim">.</span>
+      </div>
+      <p class="section-body stagger" style="max-width: 520px;">
+        I attended the "From LLMs to Agents" event this week and met some of the team.
+        Came away really impressed with the product and the people. I'm not applying for
+        a specific role, but I think there's a fit somewhere in product, business, or analysis,
+        and I wanted to put this in front of you.
+      </p>
+      <div class="stagger" style="margin-top: 32px;">
+        <span class="section-tag" style="margin-bottom: 0;">SCROLL OR PRESS → TO BEGIN</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: EVENT PHOTOS -->
+  <div class="slide" data-label="THE EVENT">
+    <div class="slide-inner">
+      <div class="section-tag stagger">March 12, 2026</div>
+      <h2 class="section-title stagger">From LLMs to Agents</h2>
+      <div class="video-wrapper stagger">
+        <video autoplay loop muted playsinline>
+          <source src="event-video.mp4" type="video/mp4">
+          <source src="event-video.mov" type="video/quicktime">
+        </video>
+        <div class="video-label-top">This is me at the event, so you remember who this is ↓</div>
+        <div class="video-label">FROM LLMS TO AGENTS — TAVILY EVENT</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: WHO I AM -->
+  <div class="slide" data-label="ABOUT">
+    <div class="slide-inner">
+      <div class="section-tag stagger">About</div>
+      <h2 class="section-title stagger">I notice things most people scroll past.</h2>
+      <p class="section-body stagger">
+        Penn State, Engineering Management. I like taking messy questions
+        and turning them into something people can actually use.
+      </p>
+      <p class="section-body stagger" style="margin-top: 16px;">
+        I'm analytical but I think in product. I'll notice something interesting in data,
+        get curious about whether it's real, and before I know it I've scoped it, designed it,
+        and shipped it. Both projects I'll show you started exactly that way.
+      </p>
+      <p class="section-body stagger" style="margin-top: 16px;">
+        I don't really separate the thinking from the doing. If I'm looking at data,
+        I'm already thinking about what the product should feel like. If I'm designing something,
+        I'm already thinking about how it gets to the right people. I just like owning the whole loop.
+      </p>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: THREE AXIS -->
+  <div class="slide" data-label="THREE AXIS">
+    <div class="slide-inner">
+      <div class="section-tag stagger">Project 01</div>
+      <a href="https://threeaxis.space" target="_blank" class="project-card stagger">
+            <div>
+                <div class="card-tag">SaaS Platform — Live</div>
+                <div class="card-title">Three Axis <span class="card-status live">LIVE</span></div>
+                <div class="card-desc">
+                  Hedge funds pay for satellite imagery of parking lots, shipping data, weather feeds,
+                  anything from outside the financial system that might contain signal. Three Axis is
+                  that same idea, exogenous data overlaid directly on financial charts so users can
+                  explore whether it correlates with price action. Think alternative data platform,
+                  not a prediction tool. Live with paying users, still working on accuracy
+                  reports and GTM.
+                </div>
+            </div>
+            <div class="card-stats">
+              <span class="stat-chip green">Live — Pre-Launch</span>
+              <span class="stat-chip">Product + Design + Eng</span>
+              <span class="stat-chip">Full Stack</span>
+            </div>
+            <div class="tech-row">
+              <span class="tech-badge">Next.js 16</span>
+              <span class="tech-badge">React 19</span>
+              <span class="tech-badge">FastAPI</span>
+              <span class="tech-badge">ECharts</span>
+              <span class="tech-badge">D3.js</span>
+              <span class="tech-badge">PostgreSQL</span>
+              <span class="tech-badge">Stripe</span>
+            </div>
+        <div class="card-link">Visit threeaxis.space</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: CYCLE X -->
+  <div class="slide" data-label="CYCLE X">
+    <div class="slide-inner">
+      <div class="section-tag stagger">Project 02</div>
+      <a href="https://yashtatineni.framer.website/cycle-x/cycle-xx" target="_blank" class="project-card stagger">
+            <div>
+              <div class="card-tag">Prediction Engine — Any Time Series</div>
+              <div class="card-title">Cycle X <span class="card-status dev">IN DEV</span></div>
+              <div class="card-desc">
+                Imagine knowing precisely where the 2020 COVID crash and its bottom would land. Or the
+                2024 correction. Or the 2025 drop. Cycle X does that. It applies a proprietary
+                geometric transformation to price data, maps it into a coordinate space where market
+                dynamics become linear and measurable, then uses feature engineering on historical
+                swing structures to predict where the next one completes. Validated out of sample.
+                Works on any time series, mainly equities.
+              </div>
+            </div>
+            <div class="card-stats">
+              <span class="stat-chip tavily">Any Time Series</span>
+              <span class="stat-chip green">Backtested</span>
+              <span class="stat-chip">Out-of-Sample Validated</span>
+            </div>
+            <div class="tech-row">
+              <span class="tech-badge">Python</span>
+              <span class="tech-badge">Dash / Plotly</span>
+              <span class="tech-badge">scipy</span>
+              <span class="tech-badge">scikit-learn</span>
+              <span class="tech-badge">yfinance</span>
+            </div>
+        <div class="card-link">View Cycle X</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: WHY TAVILY -->
+  <div class="slide" data-label="WHY TAVILY">
+    <div class="slide-inner">
+      <div class="section-tag stagger">Why I'm Here</div>
+      <h2 class="section-title stagger">Why <span style="color: var(--tavily);">Tavily</span></h2>
+      <ul class="reason-list">
+        <li class="stagger">
+          <span class="reason-num">01</span>
+          <span>I came to the event because I was curious. I left genuinely impressed. The product is clean, the team knows what they're building, and the energy in that room was real. That's rare.</span>
+        </li>
+        <li class="stagger">
+          <span class="reason-num">02</span>
+          <span>Tavily is the search layer for AI agents. Every major AI company already depends on it, Cohere, MongoDB, Groq, IBM, LangChain, AWS. That's infrastructure that matters, and I want to be part of building it.</span>
+        </li>
+        <li class="stagger">
+          <span class="reason-num">03</span>
+          <span>I build products that need exactly this kind of data access. Three Axis pulls real-time exogenous data into financial charts. I've felt the pain of getting live web data into an application. I get what Tavily solves because I've been on the other side of it.</span>
+        </li>
+        <li class="stagger">
+          <span class="reason-num">04</span>
+          <span><span class="hl">I'm not applying for a specific role.</span> I'm reaching out because I think I can add value in product, business, or analysis. <span class="hl">I think like a product builder, I dig into data, and I move fast.</span> Happy to figure out the right seat together.</span>
+        </li>
+        <li class="stagger">
+          <span class="reason-num">05</span>
+          <span>I come in with a bag full of happy energy. I like getting things done and I like making the people around me feel good while we're doing it.</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: LET'S TALK -->
+  <div class="slide" data-label="LET'S TALK">
+    <div class="slide-inner" style="text-align: center;">
+      <div class="hero-text stagger" style="font-size: 3.5rem;">
+        Would love to <span class="accent">chat</span><span class="dim">.</span>
+      </div>
+      <p class="section-body stagger" style="margin: 20px auto 0; text-align: center; max-width: 420px;">
+        Thanks for taking the time, Noa. Happy to chat whenever works.
+      </p>
+      <div class="contact-links stagger" style="margin-top: 36px; justify-content: center;">
+        <a href="https://www.linkedin.com/in/yashwanthsaitatineni/" target="_blank" class="contact-link">LINKEDIN</a>
+        <a href="https://github.com/yt6363" target="_blank" class="contact-link">GITHUB</a>
+        <a href="https://yashtatineni.framer.website" target="_blank" class="contact-link">PORTFOLIO</a>
+        <a href="https://drive.google.com/file/d/1LUfI3U8cPeM7wXXQaxuw45OtLFmLDzak/view?usp=sharing" target="_blank" class="contact-link primary">RESUME</a>
+      </div>
+      <p class="stagger" style="margin-top: 48px; font-family: 'Space Mono', monospace; font-size: 0.55rem; color: var(--text-muted); letter-spacing: 0.2em;">
+        YASH TATINENI — PENN STATE — MARCH 2026
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const progressEl = document.getElementById('progress');
+  const slideLabel = document.getElementById('slideLabel');
+  let currentSlide = 0;
+
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot' + (i === 0 ? ' active' : '');
+    dot.onclick = () => goToSlide(i);
+    progressEl.appendChild(dot);
+  });
+
+  const deckId = 'tavily-noa';
+  const analytics = { slides: [], links: [], sessionStart: Date.now(), maxSlide: 0 };
+  let slideEnterTime = Date.now();
+
+  function trackSlide(from, to) {
+    const now = Date.now();
+    if (from !== null) {
+      analytics.slides.push({
+        slide: from + 1,
+        label: slides[from]?.dataset.label || '',
+        duration: Math.round((now - slideEnterTime) / 1000)
+      });
+    }
+    slideEnterTime = now;
+    analytics.maxSlide = Math.max(analytics.maxSlide, to + 1);
+  }
+
+  function trackLink(name, url) {
+    analytics.links.push({ name, url, slide: currentSlide + 1, time: Date.now() });
+  }
+
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (link && link.href) trackLink(link.textContent.trim().substring(0, 40), link.href);
+  });
+
+  function getAnalyticsSummary() {
+    trackSlide(currentSlide, currentSlide);
+    return {
+      deck: deckId,
+      totalTime: Math.round((Date.now() - analytics.sessionStart) / 1000),
+      maxSlide: analytics.maxSlide,
+      totalSlides: slides.length,
+      completed: analytics.maxSlide === slides.length,
+      slides: analytics.slides,
+      links: analytics.links,
+      timestamp: new Date().toISOString(),
+      referrer: document.referrer || 'direct',
+      userAgent: navigator.userAgent
+    };
+  }
+
+  window.addEventListener('beforeunload', () => {
+    const summary = getAnalyticsSummary();
+    console.log('[DECK ANALYTICS]', JSON.stringify(summary, null, 2));
+  });
+
+  function goToSlide(n) {
+    if (n < 0 || n >= slides.length || n === currentSlide) return;
+    trackSlide(currentSlide, n);
+    slides[currentSlide].classList.remove('active');
+    currentSlide = n;
+    slides[currentSlide].classList.add('active');
+    document.querySelectorAll('.progress-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === currentSlide);
+    });
+    const label = slides[currentSlide].dataset.label || '';
+    slideLabel.textContent = String(currentSlide + 1).padStart(2, '0') + ' / ' +
+      String(slides.length).padStart(2, '0') + (label ? '  —  ' + label : '');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault(); goToSlide(currentSlide + 1);
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault(); goToSlide(currentSlide - 1);
+    }
+  });
+
+  let scrollTimeout = false;
+  document.addEventListener('wheel', (e) => {
+    if (scrollTimeout) return;
+    scrollTimeout = true;
+    setTimeout(() => scrollTimeout = false, 1400);
+    if (e.deltaY > 0) goToSlide(currentSlide + 1);
+    else goToSlide(currentSlide - 1);
+  }, { passive: true });
+
+  let touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  });
+  document.addEventListener('touchend', (e) => {
+    const diffX = touchStartX - e.changedTouches[0].clientX;
+    const diffY = touchStartY - e.changedTouches[0].clientY;
+    const absDiffX = Math.abs(diffX);
+    const absDiffY = Math.abs(diffY);
+    const diff = absDiffX > absDiffY ? diffX : diffY;
+    const threshold = absDiffX > absDiffY ? 40 : 50;
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) goToSlide(currentSlide + 1);
+      else goToSlide(currentSlide - 1);
+    }
+  });
+
+  goToSlide(0);
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
